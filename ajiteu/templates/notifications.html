@@ -1,0 +1,26 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="profile-page">
+    <h5 class="fw-bold mb-3">알림</h5>
+    <ul class="list-group border-0 shadow-sm rounded-3 overflow-hidden">
+        {% for n in notifications %}
+        <li class="list-group-item list-group-item-action {% if not n.is_read %}fw-semibold bg-light{% endif %}">
+            <a href="{{ url_for('notification.mark_read', notification_id=n.id) }}" class="text-decoration-none text-reset d-block py-1">
+                <span class="badge bg-secondary me-1">{{ n.type }}</span>{{ n.message }}
+                <small class="text-muted d-block mt-1">{{ n.create_date.strftime('%Y.%m.%d %H:%M') }}</small>
+            </a>
+        </li>
+        {% else %}
+        <li class="list-group-item border-0">
+            <div class="empty-state py-4" style="box-shadow:none;border:none;">
+                <div class="empty-state-icon">🔔</div>
+                <p class="empty-state-title">새로운 알림이 없습니다</p>
+                <p class="empty-state-desc">좋아요나 댓글이 오면 여기에 표시됩니다.</p>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('post._list', username_id=g.user.id) }}" class="btn btn-outline-dark btn-sm mt-3">← 메인으로</a>
+</div>
+{% endblock %}
+

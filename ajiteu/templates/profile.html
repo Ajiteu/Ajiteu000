@@ -1,108 +1,81 @@
-{% extends "base.html" %}
+{% extends "main.html" %}
 {% block content %}
 
-<!-- 모달로 감싸기 -->
-<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 720px;">
-    <div class="modal-content">
-      <div class="modal-body p-4">
-
-        <header class="mb-4">
-          <h1 class="h4 mb-1">프로필 설정</h1>
-          <p class="text-muted small mb-0">나를 더 잘 표현할 수 있도록 프로필을 관리해보세요.</p>
-        </header>
+<div id="profileModal" class="modal-overlay-write" style="display: flex;">
+    <div class="modal-write-card" style="max-width: 720px; width: 95%;">
+        <div class="border-bottom pb-2 mb-3">
+            <h5 class="fw-bold m-0">프로필 설정</h5>
+            <p class="text-muted small mb-0 mt-1">나를 더 잘 표현할 수 있도록 프로필을 관리해보세요.</p>
+        </div>
 
         <form method="post" enctype="multipart/form-data"
               action="{{ url_for('profile.detail', username_id=user.id) }}">
-          {{ form.csrf_token }}
+            {{ form.csrf_token }}
 
-          <!-- 프로필 사진 영역 -->
-          <section class="border rounded-3 p-4 d-flex flex-wrap justify-content-evenly align-items-center gap-4 mb-4">
-            <div>
-              <h2 class="h6 mb-1">프로필 사진</h2>
-              <p class="text-muted small text-nowrap mb-0">나를 대표할 수 있는 사진을 등록해보세요.</p>
-            </div>
+            <section class="border rounded-3 p-4 d-flex flex-wrap justify-content-evenly align-items-center gap-4 mb-4">
+                <div>
+                    <h2 class="h6 mb-1">프로필 사진</h2>
+                    <p class="text-muted small text-nowrap mb-0">나를 대표할 수 있는 사진을 등록해보세요.</p>
+                </div>
 
-            <div class="rounded-circle border d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0"
-                 style="width:110px; height:110px;">
-              {% if user.image_path %}
-              
-              <img id="profileImg" src="{{ url_for('static', filename=g.user.image_path) }}" alt="프로필 사진"
-                   class="w-100 h-100" style="object-fit: cover;">
-              <span id="photoPlaceholder" class="small text-secondary text-center px-2" hidden>사진 이미지</span>
-              {% else %}
-              <img id="profileImg" src="" alt="프로필 사진" class="w-100 h-100" style="object-fit: cover;" hidden>
-              <span id="photoPlaceholder" class="small text-secondary text-center px-2">사진 이미지</span>
-              {% endif %}
-            </div>
+                <div class="rounded-circle border d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0"
+                     style="width:110px; height:110px;">
+                    {% if user.image_path %}
+                    <img id="profileImg" src="{{ url_for('static', filename=user.image_path) }}" alt="프로필 사진"
+                         class="w-100 h-100" style="object-fit: cover;">
+                    <span id="photoPlaceholder" class="small text-secondary text-center px-2" hidden>사진 이미지</span>
+                    {% else %}
+                    <img id="profileImg" src="" alt="프로필 사진" class="w-100 h-100" style="object-fit: cover;" hidden>
+                    <span id="photoPlaceholder" class="small text-secondary text-center px-2">사진 이미지</span>
+                    {% endif %}
+                </div>
 
-            <div class="d-flex flex-column align-items-start gap-2">
-              <label class="btn btn-outline-dark btn-sm" for="image">사진 변경</label>
-              {{ form.image(id="image", accept=".jpg,.jpeg,.png", hidden=True) }}
-              <span class="text-muted small">JPG, JPEG, PNG 파일</span>
-              {% if form.image.errors %}
-                <div class="text-danger small">{{ form.image.errors[0] }}</div>
-              {% endif %}
-            </div>
-          </section>
+                <div class="d-flex flex-column align-items-start gap-2">
+                    <label class="btn btn-outline-dark btn-sm" for="image">사진 변경</label>
+                    {{ form.image(id="image", accept=".jpg,.jpeg,.png", hidden=True) }}
+                    <span class="text-muted small">JPG, JPEG, PNG 파일</span>
+                    {% if form.image.errors %}
+                    <div class="text-danger small">{{ form.image.errors[0] }}</div>
+                    {% endif %}
+                </div>
+            </section>
 
-          <hr>
+            <section class="row mb-4 align-items-start">
+                <div class="col-md-4">
+                    <label for="nickname" class="form-label fw-semibold mb-1">닉네임</label>
+                    <p class="text-muted small mb-0">다른 사용자에게 표시되는 이름입니다.</p>
+                </div>
+                <div class="col-md-8">
+                    {{ form.nickname(class="form-control") }}
+                    {% if form.nickname.errors %}
+                    <div class="text-danger small mt-1">{{ form.nickname.errors[0] }}</div>
+                    {% endif %}
+                </div>
+            </section>
 
-          <!-- 닉네임 -->
-          <section class="row mb-4 align-items-start">
-            <div class="col-md-4">
-              <label for="nickname" class="form-label fw-semibold mb-1">닉네임</label>
-              <p class="text-muted small mb-0">다른 사용자에게 표시되는 이름입니다.</p>
-            </div>
-            <div class="col-md-8">
-              {{ form.nickname(class="form-control") }}
-              {% if form.nickname.errors %}
-                <div class="text-danger small mt-1">{{ form.nickname.errors[0] }}</div>
-              {% endif %}
-            </div>
-          </section>
+            <section class="row mb-4 align-items-start">
+                <div class="col-md-4">
+                    <label for="user_intro" class="form-label fw-semibold mb-1">프로필 소개</label>
+                    <p class="text-muted small mb-0">나에 대해 간단히 소개해주세요.</p>
+                </div>
+                <div class="col-md-8">
+                    {{ form.user_intro(class="form-control", rows=3) }}
+                    {% if form.user_intro.errors %}
+                    <div class="text-danger small mt-1">{{ form.user_intro.errors[0] }}</div>
+                    {% endif %}
+                </div>
+            </section>
 
-          <!-- 프로필 소개 -->
-          <section class="row mb-4 align-items-start">
-            <div class="col-md-4">
-              <label for="user_intro" class="form-label fw-semibold mb-1">프로필 소개</label>
-              <p class="text-muted small mb-0">나에 대해 간단히 소개해주세요.</p>
-            </div>
-            <div class="col-md-8">
-              {{ form.user_intro(class="form-control", rows=3) }}
-              {% if form.user_intro.errors %}
-                <div class="text-danger small mt-1">{{ form.user_intro.errors[0] }}</div>
-              {% endif %}
-            </div>
-          </section>
-
-          <footer class="d-flex justify-content-end gap-2 flex-wrap">
-            <a href="javascript:history.back()" class="btn btn-outline-dark">취소</a>
-            <button type="submit" class="btn btn-dark">저장하기</button>
-          </footer>
-
+            <footer class="d-flex justify-content-end gap-2 flex-wrap">
+                <a href="{{ url_for('post._list', username_id=user.id) }}" class="btn btn-outline-dark">취소</a>
+                <button type="submit" class="btn btn-dark">저장하기</button>
+            </footer>
         </form>
-
-      </div>
     </div>
-  </div>
 </div>
-
-{% with messages = get_flashed_messages() %}
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    {% if not messages %}
-    const profileModal = new bootstrap.Modal(document.getElementById('profileModal'), {
-      backdrop: 'static'
-    });
-    profileModal.show();
-    {% endif %}
-  });
-</script>
-{% endwith %}
 
 {% endblock %}
 
-{% block script %}
+{% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 {% endblock %}

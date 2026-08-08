@@ -1,0 +1,19 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="p-4">
+    <h5 class="fw-bold">{{ target_user.nickname }} · {{ title }}</h5>
+    <ul class="list-group mt-3">
+        {% for u in users %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('profile.view', username_id=u.id) }}">{{ u.nickname or u.username }}</a>
+            {% if g.user.id != u.id %}
+            <a href="{{ url_for('follow.add', user_id=u.id) }}" class="btn btn-sm btn-outline-dark">팔로우</a>
+            {% endif %}
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">목록이 비어 있습니다.</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('profile.view', username_id=target_user.id) }}" class="btn btn-secondary btn-sm mt-3">돌아가기</a>
+</div>
+{% endblock %}

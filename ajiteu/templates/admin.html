@@ -1,0 +1,40 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="p-4">
+    <h5 class="fw-bold mb-3">관리자</h5>
+
+    <h6 class="mt-4">신고 목록</h6>
+    <ul class="list-group mb-4">
+        {% for r in reports %}
+        <li class="list-group-item">
+            #{{ r.id }} · post={{ r.post_id }} · {{ r.reason }}
+            <div class="mt-2 d-flex gap-2">
+                {% if r.post_id %}
+                <a href="{{ url_for('admin.delete_post', post_id=r.post_id) }}" class="btn btn-sm btn-danger"
+                    onclick="return confirm('게시글을 삭제할까요?')">글 삭제</a>
+                {% endif %}
+                <a href="{{ url_for('admin.resolve_report', report_id=r.id) }}" class="btn btn-sm btn-outline-dark">처리완료</a>
+            </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">대기 중인 신고 없음</li>
+        {% endfor %}
+    </ul>
+
+    <h6>회원 관리</h6>
+    <ul class="list-group">
+        {% for u in users %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ u.username }} ({{ u.nickname }}) · role={{ u.role }} · active={{ u.is_active }}</span>
+            <div class="d-flex gap-2">
+                {% if u.is_active %}
+                <a href="{{ url_for('admin.deactivate_user', user_id=u.id) }}" class="btn btn-sm btn-outline-danger">비활성</a>
+                {% else %}
+                <a href="{{ url_for('admin.activate_user', user_id=u.id) }}" class="btn btn-sm btn-outline-success">활성</a>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

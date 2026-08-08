@@ -1,28 +1,51 @@
 from ajiteu import db
-from ajiteu.models import Post, Comment,Reply, User, post_liker
+from ajiteu.models import User, Follow, Post
 from ajiteu.forms import ProfileForm
-from flask import Blueprint, render_template, url_for, redirect, request, g, flash, current_app, session
+from flask import Blueprint, render_template, url_for, redirect, g, flash, current_app
 from datetime import datetime
-from sqlalchemy import func, distinct
 import os
 import uuid
-from werkzeug.utils import secure_filename
-from ajiteu.views.auth_views import login_required    # 데코레이터 임포트
+from ajiteu.views.auth_views import login_required
+from ajiteu.views.posts_views import CATEGORIES
+from ajiteu.views.trend_views import get_weekly_trends
 
 
 bp = Blueprint('profile', __name__, url_prefix='/profile')
 
-@bp.before_app_request
-def load_logged_in_user():
-    user_id = session.get('user_id')
-    if user_id is None:
-        g.user = None
-    else:
-        g.user = User.query.get(user_id)
+
+@bp.route('/view/<int:username_id>/')
+@login_required
+def view(username_id):
+    user = User.query.get_or_404(username_id)
+    is_me = g.user.id == username_id
+    is_following = (
+        Follow.query.filter_by(follower_id=g.user.id, following_id=username_id).first() is not None
+        if not is_me else False
+    )
+    follower_count = Follow.query.filter_by(following_id=username_id).count()
+    following_count = Follow.query.filter_by(follower_id=username_id).count()
+    post_count = Post.query.filter_by(user_id=username_id).count()
+
+    return render_template(
+        'profile_view.html',
+        profile_user=user,
+        is_me=is_me,
+        is_following=is_following,
+        follower_count=follower_count,
+        following_count=following_count,
+        post_count=post_count,
+        user=g.user,
+        categories=CATEGORIES,
+        weekly_trends=get_weekly_trends(),
+    )
+
 
 @bp.route('/detail/<int:username_id>/', methods=('GET', 'POST'))
 @login_required
 def detail(username_id):
+    if g.user.id != username_id:
+        return redirect(url_for('profile.view', username_id=username_id))
+
     user = User.query.get_or_404(username_id)
     form = ProfileForm(obj=user)
 
@@ -35,17 +58,21 @@ def detail(username_id):
             today = datetime.now().strftime('%Y%m%d')
             upload_folder = os.path.join(current_app.root_path, 'static/images', today)
             os.makedirs(upload_folder, exist_ok=True)
-
             ext = os.path.splitext(image_file.filename)[1]
             filename = f"{uuid.uuid4()}{ext}"
-
             file_path = os.path.join(upload_folder, filename)
             image_file.save(file_path)
-
             user.image_path = f'images/{today}/{filename}'
 
         db.session.commit()
-        # flash('프로필이 저장되었습니다.')
+        flash('프로필이 저장되었습니다.', 'success')
         return redirect(url_for('post._list', username_id=user.id))
 
-    return render_template('profile.html', user=user, form=form)
+    weekly_trends = get_weekly_trends()
+    return render_template(
+        'profile.html',
+        user=user,
+        form=form,
+        categories=CATEGORIES,
+        weekly_trends=weekly_trends,
+    )

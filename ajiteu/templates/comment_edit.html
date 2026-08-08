@@ -1,0 +1,18 @@
+{% extends 'main.html' %}
+{% block content %}
+<div id="postModal" class="modal-overlay-write" style="display: flex;">
+    <div class="modal-write-card">
+        <h5 class="fw-bold mb-3">댓글 수정</h5>
+        <form method="POST" action="{{ url_for('comment.modify', comment_id=comment.id) }}">
+            {{ form.csrf_token }}
+            <div class="mb-3">
+                {{ form.content(class='form-control', rows=4) }}
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('post.detail', post_id=comment.post.id) }}" class="btn btn-sm btn-outline-secondary">취소</a>
+                <button type="submit" class="btn btn-sm btn-dark">수정</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

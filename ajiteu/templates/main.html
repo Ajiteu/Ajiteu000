@@ -4,43 +4,42 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- 모바일용 반응형 설정 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ajiteu</title>
-    <!-- Bootstrap 5 CSS CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <!-- 커스텀 메인 레이아웃 및 컴포넌트 CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flash.css') }}">
 </head>
 
 <body class="bg-light text-dark">
+    {% set current_user = user if user is defined and user else g.user %}
+    {% set category = category|default('all') %}
+    {% set kw = kw|default('') %}
+    {% set so = so|default('recent') %}
+    {% set is_my_posts = is_my_posts|default(false) %}
+    {% set is_bookmarks = is_bookmarks|default(false) %}
+    {% set categories = categories|default({'all': '전체', 'travel': '여행', 'exercise': '운동', 'food': '음식'}) %}
+    {% set weekly_trends = weekly_trends|default([]) %}
     {% block content %}
     <div class="main-wrapper d-flex mx-auto">
 
-        <!-- 1. 좌측 프로필 패널 -->
         <aside class="sidebar-left bg-white border-end p-4 d-flex flex-column flex-shrink-0">
-
             <div class="profile-section d-flex flex-column align-items-center text-center">
-                {% if g.user %}
-                <!-- 프로필 이미지 동그라미 링크 -->
-                <a href="/profile" class="text-decoration-none text-reset">
+                {% if current_user %}
+                <a href="{{ url_for('profile.detail', username_id=current_user.id) }}" class="text-decoration-none text-reset">
                     <div class="avatar-circle overflow-hidden mb-3">
-                        <img src="{{ g.user.image_path and url_for('static', filename=g.user.image_path) or url_for('static', filename='images/default.png') }}"
+                        <img src="{{ current_user.image_path and url_for('static', filename=current_user.image_path) or url_for('static', filename='images/default.png') }}"
                             alt="프로필" class="w-100 h-100 object-fit-cover"
                             data-default-img="{{ url_for('static', filename='images/default.png') }}"
                             onerror="this.onerror=null; this.src=this.dataset.defaultImg;">
                     </div>
                 </a>
-                <!-- 닉네임 링크 -->
-                <a href="/profile" class="text-decoration-none text-reset">
-                    <!-- <div class="user-name fw-bold" id="userName">닉네임</div> -->
-                    <div class="user-name fw-bold" id="userName">{{ g.user.nickname }}</div>
+                <a href="{{ url_for('profile.detail', username_id=current_user.id) }}" class="text-decoration-none text-reset">
+                    <div class="user-name fw-bold" id="userName">{{ current_user.nickname }}</div>
                 </a>
-                <!-- 프로필 소개 링크 -->
-                <a href="/profile" class="text-decoration-none text-reset">
-                    <!-- <div class="user-bio text-secondary small" id="userBio">프로필 소개</div> -->
-                    <div class="user-bio text-secondary small" id="userBio">{{ g.user.user_intro }}</div>
+                <a href="{{ url_for('profile.detail', username_id=current_user.id) }}" class="text-decoration-none text-reset">
+                    <div class="user-bio text-secondary small" id="userBio">{{ current_user.user_intro }}</div>
                 </a>
                 {% endif %}
             </div>
@@ -48,131 +47,135 @@
             <hr class="divider my-4">
 
             <div class="menu-section d-flex flex-column align-items-center gap-3">
-                {% if g.user %}
-                <a href="{{ url_for('post.create', username_id=g.user.id) if g.user else url_for('auth.login') }}"
+                <a href="{{ url_for('post.create', username_id=current_user.id) if current_user else url_for('auth.login') }}"
                     class="btn-pill btn-write w-100 text-decoration-none text-center fw-semibold">글쓰기</a>
-                {% else %}
-                <a href="{{ url_for('auth.login') }}"
-                    class="btn-pill btn-write w-100 text-decoration-none text-center fw-semibold">글쓰기</a>
-                {% endif %}
-                <!-- by breeze - 2026.08.07 start -->
-                <!-- <a href="/profile" class="btn-pill btn-profile w-100 text-decoration-none text-center fw-semibold">프로필
-                    설정</a> -->
-
-                {% if g.user %}
-                <a href="{{ url_for('profile.detail', username_id=g.user.id) }}"
-                    class="btn-pill btn-profile w-100 text-decoration-none text-center fw-semibold">프로필
-                    설정</a>
-                {% else %}
-                <a href="{{ url_for('auth.login') }}"
+                <a href="{{ url_for('profile.detail', username_id=current_user.id) if current_user else url_for('auth.login') }}"
                     class="btn-pill btn-profile w-100 text-decoration-none text-center fw-semibold">프로필 설정</a>
+                <a href="{{ url_for('my_posts.my_posts') }}"
+                    class="btn-pill btn-mypost w-100 text-decoration-none text-center fw-semibold{% if is_my_posts %} active{% endif %}">내가 쓴 글</a>
+                {% if is_my_posts and current_user %}
+                <a href="{{ url_for('post._list', username_id=current_user.id) }}"
+                    class="btn-pill btn-profile w-100 text-decoration-none text-center fw-semibold">전체 글</a>
                 {% endif %}
-
-                <!-- by breeze - 2026.08.07 end -->
-
-                {% if g.user %}
-                <a href="{{ url_for('post.user_posts', user_id=g.user.id) }}"
-                    class="btn-pill btn-mypost w-100 text-decoration-none text-center fw-semibold">내가 쓴
-                    글</a>
-                {% else %}
-                <a href="{{ url_for('auth.login') }}"
-                    class="btn-pill btn-mypost w-100 text-decoration-none text-center fw-semibold">내가 쓴 글</a>
+                <a href="{{ url_for('bookmark.list_bookmarks') }}"
+                    class="btn-pill btn-profile w-100 text-decoration-none text-center fw-semibold{% if is_bookmarks %} active{% endif %}">북마크</a>
+                {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('admin.dashboard') }}"
+                    class="btn-pill btn-profile w-100 text-decoration-none text-center fw-semibold">관리자</a>
                 {% endif %}
                 <div class="logout-section mt-auto pt-3">
-                    <!-- <a href="/logout" class="text-link logout text-decoration-none text-danger fw-semibold">로그아웃</a> -->
                     <a href="{{ url_for('auth.logout') }}"
                         class="text-link logout text-decoration-none text-danger fw-semibold">로그아웃</a>
                 </div>
             </div>
         </aside>
 
-        <!-- 우측 컨테이너 -->
         <div class="right-container flex-grow-1 d-flex flex-column">
 
-            <!-- 2. 상단 헤더 -->
-            <header class="search-header">
-                <!-- sinae : 808 '아지트' 눌렀을때 메인리스트 보여주기 -->
-                <h1 class="community-title"><a href="{{ url_for('post._list', username_id=g.user.id) }}"
-                        style="text-decoration: none;">아지트</a></h1>
-                <div class="search-box-wrap">
-                    <input type="text" id="searchInput" class="search-input" placeholder="검색어를 입력하세요...">
-                    <button id="searchBtn" class="search-btn">검색</button>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="px-4 pt-3">
+                {% for msg_category, message in messages %}
+                <div class="alert alert-{{ msg_category }} alert-dismissible fade show py-2 mb-2" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <header class="search-header">
+                <h1 class="community-title d-flex align-items-center justify-content-center gap-2 mb-0 w-100">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Ajiteu 로고" style="height: 36px; width: auto;">
+                    {% if current_user %}
+                    <a href="{{ url_for('post._list', username_id=current_user.id) }}" class="text-decoration-none text-reset">Ajiteu</a>
+                    {% else %}
+                    Ajiteu
+                    {% endif %}
+                </h1>
+                {% if current_user and not is_my_posts and not is_bookmarks %}
+                <div class="d-flex gap-2 mb-2">
+                    <a href="{{ url_for('post._list', username_id=current_user.id, so='recent', category=category, kw=kw) }}"
+                        class="btn btn-sm {% if so == 'recent' %}btn-dark{% else %}btn-outline-dark{% endif %}">최신글</a>
+                    <a href="{{ url_for('post._list', username_id=current_user.id, so='popular', category=category, kw=kw) }}"
+                        class="btn btn-sm {% if so == 'popular' %}btn-dark{% else %}btn-outline-dark{% endif %}">인기글</a>
+                </div>
+                {% endif %}
+                {% if is_bookmarks %}
+                <div class="search-box-wrap"><span class="search-input">북마크한 글</span></div>
+                {% elif is_my_posts %}
+                <form method="GET" action="{{ url_for('my_posts.my_posts') }}" class="search-box-wrap">
+                    <input type="hidden" name="category" value="{{ category }}">
+                    <input type="text" id="searchInput" name="kw" class="search-input" placeholder="검색어를 입력하세요..."
+                        value="{{ kw or '' }}">
+                    <button id="searchBtn" type="submit" class="search-btn">검색</button>
+                </form>
+                {% else %}
+                <form method="GET" action="{{ url_for('post._list', username_id=current_user.id) }}" class="search-box-wrap">
+                    <input type="hidden" name="category" value="{{ category }}">
+                    <input type="hidden" name="so" value="{{ so }}">
+                    <input type="text" id="searchInput" name="kw" class="search-input" placeholder="검색어를 입력하세요..."
+                        value="{{ kw or '' }}">
+                    <button id="searchBtn" type="submit" class="search-btn">검색</button>
+                </form>
+                {% endif %}
             </header>
 
-            <!-- 콘텐츠 바디 -->
             <div class="body-content d-flex flex-grow-1 overflow-hidden">
-
-                <!-- 3. 중앙 게시글 카드 수직 스크롤 영역 -->
-                <!-- sinae : 808 프로필, 닉네임 누르면 프로필설정으로 가?, 좋아요, 댓글, 조회수부분 추후 코드넣기 원래코드 백업해두었음 -->
                 <main class="content-main flex-grow-1 p-4 d-flex flex-column">
                     <div class="cards-scroll-area flex-grow-1 overflow-y-auto pe-2">
-                        <!-- main.js에 의해 동적으로 생성되는 2열 그리드 -->
-                        <div class="cards-grid" id="postGrid">
+                        <div class="cards-grid" id="postGrid" data-server-rendered="true">
                             {% if post_list and post_list.items %}
                             {% for post in post_list.items %}
-                            <!-- 카드 아이템: div로 변경, onclick으로 포스트 상세 페이지로 이동 -->
-                            <div class="card-item text-decoration-none text-reset" style="cursor: pointer;"
-                                onclick="location.href='{{ url_for('post.detail', post_id=post.id) }}'">
-                                <!-- 카드 상단: 사용자 프로필 정보 -->
-                                <div class="card-top">
-                                    <div class="author-box">
-                                        <!-- 사용자 프로필 이미지 링크 (클릭 전파 방지) -->
-                                        <a href="{{ url_for('post.user_posts', user_id=post.user.id) }}"
-                                            class="author-avatar" onclick="event.stopPropagation()">
-                                            <img src="{{ post.user.image_path and url_for('static', filename=post.user.image_path) or url_for('static', filename='images/default.png') }}"
-                                                alt="프로필" style="width: 100%; height: 100%; object-fit: cover;">
-                                        </a>
-                                        <div class="author-meta">
-                                            <!-- 사용자 닉네임 링크 (클릭 전파 방지) -->
+                            <div class="card-item">
+                                <a href="{{ url_for('post.detail', post_id=post.id, category=category, kw=kw, so=so, page=post_list.page) }}"
+                                    class="text-decoration-none text-reset d-block">
+                                    <div class="card-top">
+                                        <div class="author-box">
                                             <a href="{{ url_for('post.user_posts', user_id=post.user.id) }}"
-                                                class="author-name" onclick="event.stopPropagation()">
-                                                {{ post.user.nickname }}
+                                                class="author-avatar" onclick="event.stopPropagation();">
+                                                <img src="{{ post.user.image_path and url_for('static', filename=post.user.image_path) or url_for('static', filename='images/default.png') }}"
+                                                    alt="프로필" style="width: 100%; height: 100%; object-fit: cover;">
                                             </a>
-                                            <!-- 게시물 작성 날짜 -->
-                                            <div class="post-date">{{ post.create_date | datetime }}</div>
+                                            <div class="author-meta">
+                                                <a href="{{ url_for('post.user_posts', user_id=post.user.id) }}"
+                                                    class="author-name text-decoration-none text-reset"
+                                                    onclick="event.stopPropagation();">
+                                                    {{ post.user.nickname or post.user.username }}
+                                                </a>
+                                                <div class="post-date">{{ post.create_date | datetime }}</div>
+                                            </div>
+                                        </div>
+                                        <button class="btn-more" data-id="{{ post.id }}" type="button"
+                                            onclick="event.stopPropagation();">...</button>
+                                    </div>
+                                    <div class="card-middle">
+                                        {% if post.image_path %}
+                                        {% set image_list = post.image_path.split(',') %}
+                                        <div class="thumb-box">
+                                            <img src="{{ image_list[0].strip() | post_image_url }}" alt="게시글 이미지"
+                                                style="width: 100%; height: 100%; object-fit: cover;">
+                                        </div>
+                                        {% else %}
+                                        <div class="thumb-box"></div>
+                                        {% endif %}
+                                        <div class="text-box">
+                                            <div class="card-title">{{ post.content[:80] }}{% if post.content|length > 80 %}...{% endif %}</div>
                                         </div>
                                     </div>
-                                    <!-- 더보기 버튼 (클릭 전파 방지) -->
-                                    <button class="btn-more" data-id="{{ post.id }}" type="button"
-                                        onclick="event.stopPropagation()">...</button>
-                                </div>
-
-                                <!-- 카드 중간: 이미지 및 텍스트 내용 -->
-                                <div class="card-middle">
-                                    {% if post.image_path %}
-                                    <!-- 게시물 이미지 처리 (여러 이미지는 쉼표로 구분) -->
-                                    {% set image_list = post.image_path.split(',') %}
-                                    <div class="thumb-box">
-                                        <img src="{{ url_for('static', filename=image_list[0]) }}" alt="thumbnail"
-                                            style="width: 100%; height: 100%; object-fit: cover;">
-                                    </div>
-                                    {% endif %}
-
-                                    <!-- 게시물 텍스트 내용 (최대 150자까지 표시) -->
-                                    <div class="text-box">
-                                        <div class="card-desc">{{ post.content[:150] }}...</div>
-                                    </div>
-                                </div>
-
-                                <!-- 카드 하단: 좋아요, 댓글, 조회수 -->
+                                </a>
                                 <div class="card-bottom">
-                                    <!-- 좋아요 버튼 (클릭 전파 방지) -->
-                                    <button type="button" class="action-item like-btn" data-post-id="{{ post.id }}"
-                                        onclick="event.stopPropagation()"
-                                        style="border: none; background: none; cursor: pointer; padding: 0;">
-                                        <i class="icon">👍</i><span class="like-count">{{ post.liker | length }}</span>
-                                    </button>
-
-                                    <!-- 댓글 버튼 (클릭 전파 방지) -->
-                                    <a href="{{ url_for('post.detail', post_id=post.id) }}#comments" class="action-item"
-                                        onclick="event.stopPropagation()"
-                                        style="text-decoration: none; color: inherit;">
-                                        <i class="icon">💬</i><span class="comment-count">{{ post.comment_set | length
-                                            }}</span>
+                                    <a href="{{ url_for('post.like', post_id=post.id, source='list') }}"
+                                        class="action-item text-decoration-none text-reset"
+                                        onclick="event.stopPropagation();">
+                                        <i class="icon">👍</i>{{ post.liker | length }}
                                     </a>
-
-                                    <!-- 조회수 (읽기 전용) -->
+                                    <a href="{{ url_for('post.detail', post_id=post.id, category=category, kw=kw, so=so, page=post_list.page) }}"
+                                        class="action-item text-decoration-none text-reset"
+                                        onclick="event.stopPropagation();">
+                                        <i class="icon">💬</i>{{ post.comment_set | length }}
+                                    </a>
                                     <span class="action-item"
                                         style="display: inline-flex; align-items: center; gap: 4px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
@@ -182,156 +185,114 @@
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                             <circle cx="12" cy="12" r="3"></circle>
                                         </svg>
-                                        <span class="view-count">{{ post.view_count }}</span>
+                                        {{ post.view_count or 0 }}
                                     </span>
                                 </div>
                             </div>
                             {% endfor %}
                             {% else %}
-                            <!-- 게시물이 없을 때 표시되는 메시지 -->
-                            <p style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #999;">
-                                게시글이 존재하지 않습니다.
-                            </p>
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📝</div>
+                                <p class="empty-state-title">아직 게시글이 없습니다</p>
+                                <p class="empty-state-desc">첫 번째 글을 작성하고 커뮤니티에 참여해보세요!</p>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
 
-
-
-                    <!-- 하단 고정 페이지네이션 -->
                     {% if post_list %}
-                    <ul
-                        class="pagination-bar d-flex justify-content-center align-items-center gap-2 mt-4 list-unstyled">
+                    {% set page_base = request.path ~ '?category=' ~ category ~ '&kw=' ~ (kw|urlencode) ~ '&so=' ~ so ~ '&' %}
+                    <ul class="pagination-bar d-flex justify-content-center align-items-center gap-2 mt-4 list-unstyled flex-wrap">
                         {% if post_list.has_prev %}
                         <li>
-                            <a href="?page={{ post_list.prev_num }}">◁</a>
+                            <a href="{{ page_base }}page={{ post_list.prev_num }}"
+                                class="btn btn-sm btn-outline-dark">◀ 이전</a>
                         </li>
                         {% else %}
-                        <li>
-                            <a href="#">◁</a>
-                        </li>
+                        <li><span class="btn btn-sm btn-outline-secondary disabled">◀ 이전</span></li>
                         {% endif %}
 
                         {% for page_num in post_list.iter_pages() %}
                         {% if page_num %}
                         {% if page_num != post_list.page %}
-                        <li><a href="?page={{ page_num }}">{{ page_num }}</a></li>
-                        {% else %}
                         <li>
-                            <a href="#">{{ page_num }}</a>
+                            <a href="{{ page_base }}page={{ page_num }}"
+                                class="btn btn-sm btn-outline-dark">{{ page_num }}</a>
                         </li>
+                        {% else %}
+                        <li><span class="btn btn-sm btn-dark">{{ page_num }}</span></li>
                         {% endif %}
                         {% else %}
-                        <li>
-                            <a href="#" aria-disabled="true">...</a>
-                        </li>
+                        <li><span class="btn btn-sm btn-outline-secondary disabled">...</span></li>
                         {% endif %}
                         {% endfor %}
 
                         {% if post_list.has_next %}
                         <li>
-                            <a href="?page={{ post_list.next_num }}">▻</a>
+                            <a href="{{ page_base }}page={{ post_list.next_num }}"
+                                class="btn btn-sm btn-outline-dark">다음 ▶</a>
                         </li>
                         {% else %}
-                        <li>
-                            <a href="#" tabindex="-1" aria-disabled="true">▻</a>
-                        </li>
+                        <li><span class="btn btn-sm btn-outline-secondary disabled">다음 ▶</span></li>
                         {% endif %}
                     </ul>
                     {% endif %}
                 </main>
 
-                {#<!-- 새글 작성 팝업 모달 -->
-                <div id="postModal" class="modal-overlay-write">
-                    <div class="modal-write-card">
-                        <div class="border-bottom pb-2 mb-3">
-                            <h5 class="fw-bold m-0">새글 작성</h5>
-                        </div>
-                        <form id="postForm" method="POST" action="{{ url_for('post.create', username_id=user.id) }}"
-                            enctype="multipart/form-data">
-                            {{ form.csrf_token }}
-                            <div class="fw-bold mb-2 text-dark" id="modalUserNickname">닉네임</div>
-                            <div class="mb-3">
-                                <textarea class="form-control" id="postContent" name="content" rows="8"
-                                    placeholder="어떤 순간을 공유하고 싶으신가요?" style="resize: none;" required></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="imageUploadInput" class="btn btn-sm btn-outline-secondary">📷 사진 추가</label>
-                                <input type="file" class="d-none" name="image" accept="image/*" multiple
-                                    id="imageUploadInput">
-                                <div id="imagePreview" class="image-preview-box mt-2"></div>
-                            </div>
-                            <div class="d-flex justify-content-end gap-2 pt-2">
-                                <button type="button" class="btn btn-secondary btn-sm px-3"
-                                    id="btnCancelWrite">취소</button>
-                                <button type="submit" class="btn btn-primary btn-sm px-3">등록하기</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>#}
-
-                <!-- 4. 우측 사이드바 -->
                 <aside class="sidebar-right bg-white border-start p-4">
                     <div class="widget-block mb-4">
                         <div class="widget-title fw-bold mb-3">카테고리</div>
                         <ul class="widget-list list-unstyled d-flex flex-column gap-2 m-0 p-0">
-                            <li class="list-item category-item active" data-category="all">전체</li>
-                            <li class="list-item category-item" data-category="travel">여행</li>
-                            <li class="list-item category-item" data-category="exercise">운동</li>
-                            <li class="list-item category-item" data-category="food">음식</li>
+                            {% for cat_key, cat_label in categories.items() %}
+                            <li class="list-item category-item{% if category == cat_key %} active{% endif %}"
+                                data-category="{{ cat_key }}">
+                                {% if is_my_posts %}
+                                <a href="{{ url_for('my_posts.my_posts', category=cat_key, kw=kw) }}"
+                                    class="btn btn-sm w-100 {% if category == cat_key %}btn-dark{% else %}btn-outline-dark{% endif %}">{{ cat_label }}</a>
+                                {% else %}
+                                <a href="{{ url_for('post._list', username_id=current_user.id, category=cat_key, kw=kw, so=so) }}"
+                                    class="btn btn-sm w-100 {% if category == cat_key %}btn-dark{% else %}btn-outline-dark{% endif %}">{{ cat_label }}</a>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
                         </ul>
                     </div>
 
                     <hr class="divider-short my-3">
 
                     <div class="widget-block">
-                        <div class="widget-title fw-bold mb-3">주간 트렌드</div>
+                        <div class="widget-title fw-bold mb-3">주간 TOP 5</div>
                         <ul class="widget-list trend list-unstyled d-flex flex-column gap-2 m-0 p-0">
-                            <li class="list-item text-truncate">제주 바다 사진 모음</li>
-                            <li class="list-item text-truncate">홈트 루틴 추천</li>
-                            <li class="list-item text-truncate">감성 브런치 만들기</li>
-                            <li class="list-item text-truncate">혼자 떠난 부산 여행</li>
+                            {% for trend in weekly_trends %}
+                            <li class="list-item">
+                                <a href="{{ url_for('post.detail', post_id=trend.id, category=category, kw=kw, so=so, page=post_list.page if post_list else 1) }}"
+                                    class="btn btn-sm btn-outline-dark w-100 text-start text-truncate">
+                                    <span class="fw-bold">{{ loop.index }}.</span>
+                                    {{ trend.content[:22] }}{% if trend.content|length > 22 %}...{% endif %}
+                                    <span class="text-muted ms-1">👍 {{ trend.liker | length }}</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="list-item">
+                                <div class="empty-state py-3 px-2" style="box-shadow:none;border-style:solid;">
+                                    <div class="empty-state-icon" style="font-size:1.5rem;">🔥</div>
+                                    <p class="empty-state-title mb-0" style="font-size:0.85rem;">인기글이 없습니다</p>
+                                </div>
+                            </li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </aside>
-
             </div>
         </div>
     </div>
-
-
-
     {% endblock %}
-    <!-- <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const postModal = document.getElementById('postModal');
-            const btnWriteOpen = document.getElementById('btnWriteOpen');
-            const btnCancelWrite = document.getElementById('btnCancelWrite');
 
-            // 글쓰기 버튼 클릭 시 모달 열기
-            btnWriteOpen.addEventListener('click', () => {
-                postModal.style.display = 'flex';
-            });
+    {% block overlays %}{% endblock %}
 
-            // 취소 버튼 클릭 시 모달 닫기
-            btnCancelWrite.addEventListener('click', () => {
-                postModal.style.display = 'none';
-                document.getElementById('postForm').reset();
-            });
-
-            // 모달 배경 클릭 시 닫기
-            postModal.addEventListener('click', (e) => {
-                if (e.target === postModal) {
-                    postModal.style.display = 'none';
-                    document.getElementById('postForm').reset();
-                }
-            });
-        });
-    </script> -->
-    <!-- Bootstrap 5 JS Bundle & main.js -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 
 </html>

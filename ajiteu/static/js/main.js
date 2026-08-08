@@ -3,12 +3,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSearchQuery = '';
     let globalPosts = [];
 
-    // 초기 게시글 로드
-    fetchPosts();
+    const postGrid = document.getElementById('postGrid');
+    const serverRendered = postGrid && postGrid.dataset.serverRendered === 'true';
 
-    // 1. 카테고리 클릭 이벤트
+    // 서버에서 이미 렌더링된 경우 API 재호출하지 않음
+    if (!serverRendered) {
+        fetchPosts();
+    }
+
+    // 1. 카테고리 클릭 이벤트 (API 모드 전용)
     document.querySelectorAll('.category-item').forEach(item => {
         item.addEventListener('click', (e) => {
+            if (serverRendered || e.target.closest('a')) return;
             document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
             e.target.classList.add('active');
             currentCategory = e.target.dataset.category || 'all';
@@ -16,20 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 2. 검색 이벤트
+    // 2. 검색 이벤트 (API 모드 전용)
     const searchBtn = document.getElementById('searchBtn');
     const searchInput = document.getElementById('searchInput');
 
-    if (searchBtn) {
-        searchBtn.addEventListener('click', () => {
+    if (searchBtn && !serverRendered) {
+        searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             currentSearchQuery = searchInput.value.trim();
             fetchPosts();
         });
     }
 
-    if (searchInput) {
+    if (searchInput && !serverRendered) {
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 currentSearchQuery = e.target.value.trim();
                 fetchPosts();
             }
@@ -50,9 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderPosts(globalPosts);
             })
             .catch(err => {
-                console.warn('Backend API 미연결. 더미 데이터를 출력합니다.');
-                globalPosts = getDummyPosts();
-                renderPosts(globalPosts);
+                console.warn('Backend API 호출 실패:', err);
             });
     }
 
@@ -94,25 +100,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card-middle">
                     <div class="thumb-box"></div>
                     <div class="text-box">
-                        <div class="card-desc"></div>
+                        <div class="card-desc">${escapeHtml((post.content || '').slice(0, 100))}</div>
                     </div>
                 </div>
                 <div class="card-bottom">
-                    <a href="/like" class="action-item text-decoration-none text-reset">
+                    <a href="${post.detail_url || `/post/detail/${post.id}/`}" class="action-item text-decoration-none text-reset">
                         <i class="icon">👍</i> ${post.like_count}
                     </a>
-                    <a href="/comment" class="action-item text-decoration-none text-reset">
+                    <a href="${post.detail_url || `/post/detail/${post.id}/`}" class="action-item text-decoration-none text-reset">
                         <i class="icon">💬</i> ${post.comment_count || 0}
                     </a>
-                    <a href="/view" class="action-item text-decoration-none text-reset" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="action-item" style="display: inline-flex; align-items: center; gap: 4px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-                            <line x1="4" y1="9" x2="20" y2="9"></line>
-                            <line x1="4" y1="15" x2="20" y2="15"></line>
-                            <line x1="10" y1="3" x2="8" y2="21"></line>
-                            <line x1="16" y1="3" x2="14" y2="21"></line>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
                         </svg>
-                        ${post.view_count || 156}
-                    </a>
+                        ${post.view_count || 0}
+                    </span>
                 </div>
             `;
             postGrid.appendChild(card);
@@ -171,32 +175,69 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('postForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('글이 성공적으로 등록되었습니다.');
-        closeWriteModal();
-    });
+    const postFormEl = document.getElementById('postForm');
+    if (postFormEl) {
+        postFormEl.addEventListener('submit', (e) => {
+            if (postFormEl.getAttribute('action')) {
+                return;
+            }
+            e.preventDefault();
+            alert('글이 성공적으로 등록되었습니다.');
+            closeWriteModal();
+        });
+    }
 
     /* --- 6. 게시글 상세보기 모달 제어 --- */
     function openDetailModal(post) {
-        if (post) {
-            document.getElementById('detailAuthorName').innerText = post.author || '닉네임';
-            document.getElementById('bottomLikeCount').innerText = post.like_count || 0;
-            document.getElementById('bottomCommentCount').innerText = post.comment_count || 0;
-            document.getElementById('bottomViewCount').innerText = post.view_count || 156;
+        if (post && post.id) {
+            window.location.href = post.detail_url || `/post/detail/${post.id}/`;
+            return;
         }
-        document.getElementById('postDetailModal').classList.add('active');
+        const modal = document.getElementById('postDetailModal');
+        if (!modal) return;
+        modal.classList.add('active');
     }
 
     const btnCloseDetail = document.getElementById('btnCloseDetail');
     if (btnCloseDetail) {
-        btnCloseDetail.addEventListener('click', closeDetailModal);
+        btnCloseDetail.addEventListener('click', (e) => {
+            const href = btnCloseDetail.getAttribute('href');
+            if (href && !href.startsWith('#')) {
+                return;
+            }
+            e.preventDefault();
+            closeDetailModal(e);
+        });
     }
 
-    function closeDetailModal() {
-        document.getElementById('postDetailModal').classList.remove('active');
-        document.getElementById('commentForm').reset();
+    function closeDetailModal(e) {
+        if (e) e.preventDefault();
+        const modal = document.getElementById('postDetailModal');
+        const backUrl = modal?.dataset.backUrl;
+        const currentPath = window.location.pathname;
+        if (backUrl && backUrl !== currentPath && !currentPath.includes(backUrl)) {
+            window.location.href = backUrl;
+            return;
+        }
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        modal?.classList.remove('active');
+        document.getElementById('commentForm')?.reset();
         hideDetailDropdown();
+    }
+
+    const postDetailModalEl = document.getElementById('postDetailModal');
+    if (postDetailModalEl?.classList.contains('active')) {
+        postDetailModalEl.addEventListener('click', (e) => {
+            if (e.target === postDetailModalEl) {
+                const backUrl = postDetailModalEl.dataset.backUrl;
+                if (backUrl) {
+                    window.location.href = backUrl;
+                }
+            }
+        });
     }
 
     // 모달 우측 상단 더보기(...) 내림 메뉴 토글
@@ -217,32 +258,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 상세보기 모달 우측 상단 팝업 메뉴 액션 버튼
-    document.getElementById('btnDetailDelete')?.addEventListener('click', () => {
-        alert('삭제 요청되었습니다.');
-        hideDetailDropdown();
-    });
-    document.getElementById('btnDetailEdit')?.addEventListener('click', () => {
-        alert('수정 화면으로 이동합니다.');
-        hideDetailDropdown();
-    });
-    document.getElementById('btnDetailGo')?.addEventListener('click', () => {
-        alert('게시물로 이동합니다.');
-        hideDetailDropdown();
-    });
     document.getElementById('btnDetailCancel')?.addEventListener('click', () => {
         hideDetailDropdown();
     });
 
-    // 댓글 등록 처리
-    document.getElementById('commentForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = document.getElementById('commentInput');
-        if (input.value.trim() === '') return;
+    // 댓글 이미지 미리보기
+    const commentImageUpload = document.getElementById('commentImageUpload');
+    if (commentImageUpload) {
+        commentImageUpload.addEventListener('change', (event) => {
+            const previewContainer = document.getElementById('commentImagePreview');
+            if (!previewContainer) return;
+            previewContainer.innerHTML = '';
+            Array.from(event.target.files || []).forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-img';
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    }
 
-        const commentList = document.getElementById('commentList');
-        const newComment = document.createElement('div');
-        newComment.className = 'comment-item';
-        newComment.innerHTML = `
+    // 댓글 등록 처리 (서버 폼은 그대로 submit)
+    const commentFormEl = document.getElementById('commentForm');
+    if (commentFormEl) {
+        commentFormEl.addEventListener('submit', (e) => {
+            if (commentFormEl.getAttribute('action')) {
+                return;
+            }
+
+            e.preventDefault();
+            const input = document.getElementById('commentInput');
+            if (!input || input.value.trim() === '') return;
+
+            const commentList = document.getElementById('commentList');
+            const newComment = document.createElement('div');
+            newComment.className = 'comment-item';
+            newComment.innerHTML = `
             <div class="d-flex align-items-start gap-2">
                 <div class="comment-profile-circle flex-shrink-0"></div>
                 <div>
@@ -251,14 +306,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-        commentList.appendChild(newComment);
-        input.value = '';
+            commentList.appendChild(newComment);
+            input.value = '';
 
-        const mainCount = document.getElementById('mainCommentCount');
-        const current = parseInt(mainCount.innerText) || 0;
-        mainCount.innerText = current + 1;
-        document.getElementById('bottomCommentCount').innerText = current + 1;
-    });
+            const mainCount = document.getElementById('mainCommentCount');
+            const current = parseInt(mainCount.innerText) || 0;
+            mainCount.innerText = current + 1;
+            document.getElementById('bottomCommentCount').innerText = current + 1;
+        });
+    }
 
     // 메인 더보기(...) 옵션 팝업 닫기 처리
     const btnCloseModal = document.getElementById('btnCloseModal');

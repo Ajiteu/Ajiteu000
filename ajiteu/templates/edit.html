@@ -1,0 +1,25 @@
+{% extends 'main.html' %}
+{% block content %}
+<div id="postModal" class="modal-overlay-write" style="display: flex;">
+    <div class="modal-write-card">
+        <div class="border-bottom pb-2 mb-3">
+            <h5 class="fw-bold m-0">게시글 수정</h5>
+        </div>
+        <form method="POST" action="{{ url_for('post.modify', post_id=post.id) }}" enctype="multipart/form-data">
+            {{ form.csrf_token }}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">내용</label>
+                {{ form.content(class='form-control', rows=8) }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">이미지 변경(선택)</label>
+                {{ form.image(class='form-control') }}
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('post.detail', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary">취소</a>
+                <button type="submit" class="btn btn-sm btn-dark">수정하기</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

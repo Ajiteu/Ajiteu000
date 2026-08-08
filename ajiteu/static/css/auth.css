@@ -1,0 +1,77 @@
+/* 로그인 / 회원가입 */
+.auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8f9fc 0%, #f3eef8 50%, #fef3ee 100%);
+}
+
+.auth-brand-panel {
+    background: linear-gradient(160deg, #8b7ec8 0%, #a78bfa 45%, #f4a98a 100%);
+    color: #fff;
+    position: relative;
+}
+
+.auth-brand-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.15), transparent 50%);
+}
+
+.auth-brand-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.auth-brand-panel h2 {
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.auth-brand-panel p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.auth-form-panel {
+    background-color: #f8f9fc;
+}
+
+.auth-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e2e8f0;
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-card .form-control {
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    border-color: #e2e8f0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-card .form-control:focus {
+    border-color: #8b7ec8;
+    box-shadow: 0 0 0 3px rgba(139, 126, 200, 0.15);
+}
+
+.auth-logo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .auth-brand-panel {
+        display: none !important;
+    }
+
+    .auth-form-panel {
+        min-height: 100vh;
+        padding: 2rem 1.25rem !important;
+    }
+}
