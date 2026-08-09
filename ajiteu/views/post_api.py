@@ -5,7 +5,7 @@ from ajiteu.views.posts_views import build_post_query, CATEGORIES, detect_catego
 from ajiteu.views.trend_views import get_weekly_trends
 from ajiteu.forms import PostForm, CommentForm, ImageUploadForm
 from ajiteu.notification_service import create_notification
-from ajiteu.models import Bookmark, Follow
+from ajiteu.models import Bookmark
 from flask import (
     Blueprint, render_template, url_for, redirect, request, g, flash,
     current_app, session, send_from_directory,
@@ -140,10 +140,6 @@ def detail(post_id):
 
     is_liked = g.user in post.liker
     is_bookmarked = Bookmark.query.filter_by(user_id=g.user.id, post_id=post_id).first() is not None
-    is_following_author = (
-        Follow.query.filter_by(follower_id=g.user.id, following_id=post.user_id).first() is not None
-        if post.user_id != g.user.id else False
-    )
 
     prev_post = (
         Post.query.filter(Post.create_date > post.create_date)
@@ -175,7 +171,6 @@ def detail(post_id):
         back_url=back_url,
         is_liked=is_liked,
         is_bookmarked=is_bookmarked,
-        is_following_author=is_following_author,
         prev_post=prev_post,
         next_post=next_post,
     )

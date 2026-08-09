@@ -22,7 +22,7 @@ def create_app():
     from .views import (
         main_views, post_api, reply_api, comment_api, auth_views, profile,
         posts_views, my_posts_views, trend_views, bookmark_views,
-        follow_views, notification_views, admin_views,
+        notification_views, admin_views,
     )
     app.register_blueprint(main_views.bp)
     app.register_blueprint(auth_views.bp)
@@ -34,7 +34,6 @@ def create_app():
     app.register_blueprint(my_posts_views.bp)
     app.register_blueprint(trend_views.bp)
     app.register_blueprint(bookmark_views.bp)
-    app.register_blueprint(follow_views.bp)
     app.register_blueprint(notification_views.bp)
     app.register_blueprint(admin_views.bp)
 

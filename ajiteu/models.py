@@ -97,17 +97,6 @@ class Bookmark(db.Model):
     __table_args__ = (UniqueConstraint('user_id', 'post_id', name='uq_bookmark_user_post'),)
 
 
-class Follow(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    follower_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    following_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    create_date = db.Column(db.DateTime(), nullable=False, default=datetime.now)
-    follower = db.relationship('User', foreign_keys=[follower_id], backref=db.backref('following_set'))
-    following = db.relationship('User', foreign_keys=[following_id], backref=db.backref('follower_set'))
-
-    __table_args__ = (UniqueConstraint('follower_id', 'following_id', name='uq_follow_pair'),)
-
-
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)

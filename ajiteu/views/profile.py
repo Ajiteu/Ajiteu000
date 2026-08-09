@@ -1,5 +1,5 @@
 from ajiteu import db
-from ajiteu.models import User, Follow, Post
+from ajiteu.models import User, Post
 from ajiteu.forms import ProfileForm
 from flask import Blueprint, render_template, url_for, redirect, g, flash, current_app
 from datetime import datetime
@@ -18,21 +18,12 @@ bp = Blueprint('profile', __name__, url_prefix='/profile')
 def view(username_id):
     user = User.query.get_or_404(username_id)
     is_me = g.user.id == username_id
-    is_following = (
-        Follow.query.filter_by(follower_id=g.user.id, following_id=username_id).first() is not None
-        if not is_me else False
-    )
-    follower_count = Follow.query.filter_by(following_id=username_id).count()
-    following_count = Follow.query.filter_by(follower_id=username_id).count()
     post_count = Post.query.filter_by(user_id=username_id).count()
 
     return render_template(
         'profile_view.html',
         profile_user=user,
         is_me=is_me,
-        is_following=is_following,
-        follower_count=follower_count,
-        following_count=following_count,
         post_count=post_count,
         user=g.user,
         categories=CATEGORIES,

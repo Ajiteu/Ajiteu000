@@ -1,42 +1,28 @@
-{% extends 'main.html' %}
-{% block content %}
-<div class="profile-page">
-    <div class="profile-page-header">
-        <img class="profile-page-avatar"
-            src="{{ profile_user.image_path and url_for('static', filename=profile_user.image_path) or url_for('static', filename='images/default.png') }}"
-            alt="프로필">
-        <h5 class="fw-bold mb-1">{{ profile_user.nickname or profile_user.username }}</h5>
-        <p class="text-muted small mb-0">{{ profile_user.user_intro or '아직 소개가 없습니다.' }}</p>
-
-        <div class="profile-stats">
-            <div class="profile-stat">
-                <div class="profile-stat-num">{{ post_count }}</div>
-                <div class="profile-stat-label">게시글</div>
-            </div>
-            <div class="profile-stat">
-                <div class="profile-stat-num">{{ follower_count }}</div>
-                <div class="profile-stat-label">팔로워</div>
-            </div>
-            <div class="profile-stat">
-                <div class="profile-stat-num">{{ following_count }}</div>
-                <div class="profile-stat-label">팔로잉</div>
-            </div>
-        </div>
-
-        <div class="d-flex gap-2 justify-content-center flex-wrap">
-            {% if is_me %}
-            <a href="{{ url_for('profile.detail', username_id=profile_user.id) }}" class="btn btn-sm btn-dark">프로필 수정</a>
-            {% elif is_following %}
-            <a href="{{ url_for('follow.remove', user_id=profile_user.id) }}" class="btn btn-sm btn-outline-secondary">언팔로우</a>
-            {% else %}
-            <a href="{{ url_for('follow.add', user_id=profile_user.id) }}" class="btn btn-sm btn-dark">팔로우</a>
-            {% endif %}
-            <a href="{{ url_for('follow.followers', user_id=profile_user.id) }}" class="btn btn-sm btn-outline-dark">팔로워</a>
-            <a href="{{ url_for('follow.following', user_id=profile_user.id) }}" class="btn btn-sm btn-outline-dark">팔로잉</a>
-        </div>
-    </div>
-
-    <a href="{{ url_for('post._list', username_id=g.user.id) }}" class="btn btn-outline-dark btn-sm">← 메인으로</a>
-</div>
-{% endblock %}
+{% extends 'main.html' %}
+{% block content %}
+<div class="profile-page">
+    <div class="profile-page-header">
+        <img class="profile-page-avatar"
+            src="{{ profile_user.image_path and url_for('static', filename=profile_user.image_path) or url_for('static', filename='images/default.png') }}"
+            alt="프로필">
+        <h5 class="fw-bold mb-1">{{ profile_user.nickname or profile_user.username }}</h5>
+        <p class="text-muted small mb-0">{{ profile_user.user_intro or '아직 소개가 없습니다.' }}</p>
+
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <div class="profile-stat-num">{{ post_count }}</div>
+                <div class="profile-stat-label">게시글</div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+            {% if is_me %}
+            <a href="{{ url_for('profile.detail', username_id=profile_user.id) }}" class="btn btn-sm btn-dark">프로필 수정</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('post._list', username_id=g.user.id) }}" class="btn btn-outline-dark btn-sm">← 메인으로</a>
+</div>
+{% endblock %}
 

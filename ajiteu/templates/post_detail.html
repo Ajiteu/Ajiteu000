@@ -53,13 +53,6 @@
                     </div>
                     <div class="fw-bold text-dark fs-6" id="detailAuthorName">{{ post.user.nickname or post.user.username }}</div>
                 </a>
-                {% if post.user_id != g.user.id %}
-                    {% if is_following_author %}
-                    <a href="{{ url_for('follow.remove', user_id=post.user_id) }}" class="btn btn-sm btn-outline-secondary">언팔로우</a>
-                    {% else %}
-                    <a href="{{ url_for('follow.add', user_id=post.user_id) }}" class="btn btn-sm btn-outline-dark">팔로우</a>
-                    {% endif %}
-                {% endif %}
             </div>
 
             <div class="mb-3 text-dark small" id="detailContent" style="white-space: pre-line; line-height: 1.5;">{{ post.content }}</div>
