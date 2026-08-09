@@ -58,7 +58,10 @@ class Post(db.Model):
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), nullable=False)
-    post = db.relationship('Post', backref=db.backref('comment_set'))
+    post = db.relationship(
+        'Post',
+        backref=db.backref('comment_set', cascade='all, delete-orphan'),
+    )
     content = db.Column(db.Text(), nullable=False)
     create_date = db.Column(db.DateTime(), nullable=False)
     modify_date = db.Column(db.DateTime())
@@ -80,7 +83,10 @@ class Reply(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), nullable=True)
     post = db.relationship('Post', backref=db.backref('reply_set'))
     comment_id = db.Column(db.Integer, db.ForeignKey('comment.id', ondelete='CASCADE'), nullable=True)
-    comment = db.relationship('Comment', backref=db.backref('reply_set'))
+    comment = db.relationship(
+        'Comment',
+        backref=db.backref('reply_set', cascade='all, delete-orphan'),
+    )
     liker = db.relationship(
         'User', secondary=reply_liker, backref=db.backref('reply_liker_set', lazy='dynamic')
     )
@@ -92,7 +98,10 @@ class Bookmark(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'), nullable=False)
     create_date = db.Column(db.DateTime(), nullable=False, default=datetime.now)
     user = db.relationship('User', backref=db.backref('bookmark_set'))
-    post = db.relationship('Post', backref=db.backref('bookmark_set'))
+    post = db.relationship(
+        'Post',
+        backref=db.backref('bookmark_set', cascade='all, delete-orphan'),
+    )
 
     __table_args__ = (UniqueConstraint('user_id', 'post_id', name='uq_bookmark_user_post'),)
 

@@ -290,6 +290,14 @@
 
     {% block overlays %}{% endblock %}
 
+    <div id="postOptionModal" class="modal-overlay hidden">
+        <div class="post-option-content">
+            <a id="postOptionEdit" href="#" class="modal-item text-decoration-none text-reset d-block">수정</a>
+            <a id="postOptionDelete" href="#" class="modal-item danger text-decoration-none text-reset d-block">삭제</a>
+            <button id="btnCloseModal" type="button" class="modal-item cancel">취소</button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_scripts %}{% endblock %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

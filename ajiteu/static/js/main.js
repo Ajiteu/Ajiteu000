@@ -122,15 +122,34 @@ document.addEventListener('DOMContentLoaded', () => {
             postGrid.appendChild(card);
         });
 
-        // 카드 상단 더보기(...) 버튼 클릭 시 옵션 모달 오픈
+        initPostMoreButtons();
+    }
+
+    function openPostOptionModal(btn) {
+        const modal = document.getElementById('postOptionModal');
+        const editLink = document.getElementById('postOptionEdit');
+        const deleteLink = document.getElementById('postOptionDelete');
+        if (!modal || !editLink || !deleteLink || !btn) return;
+
+        const postId = btn.dataset.id;
+        editLink.href = `/post/modify/${postId}/`;
+        deleteLink.href = `/post/delete/${postId}/`;
+        modal.classList.remove('hidden');
+    }
+
+    function initPostMoreButtons() {
         document.querySelectorAll('.btn-more').forEach(btn => {
+            if (btn.dataset.moreBound === 'true') return;
+            btn.dataset.moreBound = 'true';
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const modal = document.getElementById('postOptionModal');
-                if (modal) modal.classList.remove('hidden');
+                e.preventDefault();
+                openPostOptionModal(btn);
             });
         });
     }
+
+    initPostMoreButtons();
 
     /* --- 5. 새글 작성 모달 제어 --- */
     const btnWriteOpen = document.getElementById('btnWriteOpen');
@@ -320,7 +339,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseModal = document.getElementById('btnCloseModal');
     if (btnCloseModal) {
         btnCloseModal.addEventListener('click', () => {
-            document.getElementById('postOptionModal').classList.add('hidden');
+            document.getElementById('postOptionModal')?.classList.add('hidden');
+        });
+    }
+
+    const postOptionDelete = document.getElementById('postOptionDelete');
+    if (postOptionDelete) {
+        postOptionDelete.addEventListener('click', (e) => {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                e.preventDefault();
+            }
         });
     }
 

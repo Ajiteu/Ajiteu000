@@ -24,8 +24,9 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--aj-bg);
+    background: linear-gradient(135deg, #f8f9fc 0%, #f3eef8 50%, #fef3ee 100%);
     color: var(--aj-text);
+    min-height: 100vh;
     height: 100vh;
     overflow: hidden;
     line-height: 1.5;
@@ -33,11 +34,12 @@ body {
 
 .main-wrapper {
     display: flex;
+    width: 100%;
+    max-width: none;
     min-height: 100vh;
-    max-width: 1440px;
-    margin: 0 auto;
+    margin: 0;
     height: 100vh;
-    background: var(--aj-bg);
+    background: transparent;
 }
 
 /* 좌측 사이드바 */
@@ -193,12 +195,13 @@ body {
 .search-header {
     background-color: var(--aj-surface);
     border-bottom: 1px solid var(--aj-border);
-    padding: 1.25rem 1.5rem 1rem;
+    padding: 1.25rem 2rem 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.85rem;
     box-shadow: var(--aj-shadow-sm);
+    width: 100%;
 }
 
 .community-title {
@@ -216,7 +219,7 @@ body {
     display: flex;
     gap: 0.5rem;
     width: 100%;
-    max-width: 560px;
+    max-width: min(840px, 100%);
     padding-right: 0;
 }
 
@@ -262,14 +265,16 @@ body {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    width: 100%;
 }
 
 .content-main {
     flex: 1;
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem 2rem;
     display: flex;
     flex-direction: column;
     min-width: 0;
+    width: 100%;
 }
 
 .cards-scroll-area {
@@ -290,9 +295,10 @@ body {
 
 .cards-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
     align-items: start;
+    width: 100%;
 }
 
 .pagination-bar {
@@ -509,6 +515,35 @@ body {
 
 .modal-item.cancel {
     color: var(--aj-muted);
+}
+
+/* ========================================================
+   데스크톱 (769px 이상) – 로그인 화면과 동일한 full-width 느낌
+   ======================================================== */
+@media (min-width: 769px) {
+    .right-container {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .content-main {
+        padding: 1.5rem 2.25rem;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+}
+
+@media (min-width: 1400px) {
+    .content-main {
+        padding: 1.5rem 2.5rem;
+    }
+
+    .search-box-wrap {
+        max-width: min(960px, 100%);
+    }
 }
 
 /* ========================================================
